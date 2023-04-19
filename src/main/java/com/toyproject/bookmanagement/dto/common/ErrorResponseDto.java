@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class ErrorResponseDto<T> {
+public class ErrorResponseDto<T> { //메세지랑 에러데이터(에러Map)전달할수 있는용도
 	private String message;
-	private T errorData;
+	private T errorData; //(errorMap)
 }
