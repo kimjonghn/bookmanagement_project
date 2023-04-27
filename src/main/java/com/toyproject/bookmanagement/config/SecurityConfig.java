@@ -2,15 +2,27 @@ package com.toyproject.bookmanagement.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
+import com.toyproject.bookmanagement.security.JwtAuthenticationEntryPoint;
+import com.toyproject.bookmanagement.security.JwtAuthenticationFilter;
+import com.toyproject.bookmanagement.security.JwtTokenProvider;
+
+import lombok.RequiredArgsConstructor;
 
 @Configuration
 @EnableWebSecurity
+@RequiredArgsConstructor
 public class SecurityConfig extends WebSecurityConfigurerAdapter{
+	
+	private final JwtTokenProvider jwtTokenProvider;
+	private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
 	
 	@Bean
 	public BCryptPasswordEncoder passwordEncoder() {
@@ -18,14 +30,23 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
 	}
 	@Override
 	protected void configure(HttpSecurity http) throws Exception { //Security 기본구성*
+		http.cors();
 		http.csrf().disable(); //csrf를 막아준다
 		http.httpBasic().disable(); //httpBasic을 안쓰겠다
 		http.formLogin().disable();
+		
 		http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS); //session을 사용하지 않겠다
+		
 		http.authorizeRequests()
 			.antMatchers("/auth/**")
 			.permitAll()
 			.anyRequest()
-			.authenticated(); 
+			.authenticated()
+			.and()
+			.addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class)
+			.exceptionHandling()
+			.authenticationEntryPoint(jwtAuthenticationEntryPoint);
+			
 	}
+	
 }
